@@ -1,20 +1,25 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+  api:
+    image: python:3.11-slim
+    command: sh -c "pip install -r requirements.txt && uvicorn app:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
     ports:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - TELEGRAM_WEBHOOK_SECRET=test_secret_devin
     depends_on:
       - redis
 
   worker:
-    build: .
-    command: celery -A tasks.celery_app worker --loglevel=info
+    image: python:3.11-slim
+    command: sh -c "pip install -r requirements.txt && celery -A app.celery_app worker --loglevel=info"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
     environment:
       - REDIS_URL=redis://redis:6379/0
     depends_on:
